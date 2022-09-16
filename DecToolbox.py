@@ -1,11 +1,52 @@
 #    Created by Alexis Pérez Bellido, 2022
+import numpy as np
 
 # Creating folds containing test and train indexes
-def CreateFolds(X,nfold):
+def CreateFolds(X,Y,nfold):
+    from sklearn.model_selection import StratifiedKFold
+    skf = StratifiedKFold(n_splits=nfold,shuffle=False)
+    Folds = [None] * nfold
+    i = 0
+    numN = X.shape[0]
+    for train_index, test_index  in  skf.split(X = np.zeros(numN), y = X):
+        #print("TRAIN:", train_index, "TEST:", test_index)
+        X_train, X_test = X[train_index], X[test_index]
+        Folds[i] = { 'train_index': train_index, 'test_index': test_index}
+        i += 1
+
+    return Folds
+
+
+#   [design] = stim_features(cfg, phi)
+#    Returns hypothetical channel responses given a presented orientation, cf. Brouwer & Heeger.
+#
+#    phi         Array of length N, where N is the number of trials, that specifies the presented
+#                orientation on each trial. Orientation is specified in degrees and is expected to
+#                have a range of 0-180.
+#    cfg         Configuration dictionary that can possess the following fields:
+#                ['NumC']                               The number of hypothetical channels C to use. The
+#                                                    channels are equally distributed across the circle,
+#                                                    starting at 0.
+#                ['Tuning']                        The tuning curve according to which the responses
+#                                                    are calculated.
+#                ['Tuning'] = 'vonMises'           Von Mises curve. Kappa: concentration parameter.
+#                ['Tuning'] = 'halfRectCos'        Half-wave rectified cosine. Kappa: power.
+#                ['Tuning'] = [function_handle]    User-specified function that can take a matrix as input,
+#                                                    containing angles in radians with a range of 0-pi.
+#                ['kappa']                              Parameter(s) to be passed on to the tuning curve.
+#                ['offset']                            The orientation of the first channel. (default = 0)
+#           
+#    design      The design matrix, of size C x N, containing the hypothetical channel responses.
+#    sortedesign A sorted version of the design matrix, sorted by the presented orientation to improve model visualization.
+
+#
+# Creating folds containing test and train indexes
+def CCreateFolds(X,Y,nfold):
     from sklearn.model_selection import StratifiedKFold
     skf = StratifiedKFold(n_splits=nfold,shuffle=False)
     CrossValIdx = [None] * nfold
     i = 0
+    numN = X.shape[0]
     for train_index, test_index  in  skf.split(X = np.zeros(numN), y = X):
         #print("TRAIN:", train_index, "TEST:", test_index)
         X_train, X_test = X[train_index], X[test_index]
@@ -13,11 +54,11 @@ def CreateFolds(X,nfold):
         i += 1
 
     folds = dict()
-    folds['X_train'] = G[ CrossValIdx[0]['train_index']][:,np.newaxis]
+    folds['X_train'] = X[ CrossValIdx[0]['train_index']][:,np.newaxis]
     folds['Y_train'] = np.squeeze(Y[:,sel_t, CrossValIdx[0]['train_index']])
     folds['phi_train'] = phi[ CrossValIdx[0]['train_index']][:,np.newaxis]
 
-    folds['X_test'] = G[ CrossValIdx[0]['test_index']][:,np.newaxis]
+    folds['X_test'] = X[ CrossValIdx[0]['test_index']][:,np.newaxis]
     folds['Y_test'] = np.squeeze(Y[:,sel_t, CrossValIdx[0]['test_index']])
     folds['phi_test'] = phi[ CrossValIdx[0]['test_index']][:,np.newaxis]
     return folds
